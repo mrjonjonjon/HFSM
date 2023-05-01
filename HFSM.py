@@ -4,6 +4,7 @@ from inspect import isabstract
 class HFSM():
     def __init__(self) -> None:
         self.root = self.give_me_root_state()()
+        #the executing leaf node
         self.activestate = self.root
         
     def setup(self):
@@ -16,6 +17,9 @@ class HFSM():
         
     def HandleTransition(self,input):
         self.activestate.HandleTransition(input)
+    
+    def SetActiveState(self,state):
+        self.activestate = state
         
     class State(ABC):
         def __init__(selff,name='state',parent=None,children=[],transitions=[],outer_class=None):
@@ -72,63 +76,63 @@ class HFSM():
         def AddTransition(self,cond,dest):
             self.transitions.append((cond,dest))
             
-    def give_me_state(outer_class,**kwargs):
+    def give_me_state(outer_class):
         class HFSMState(outer_class.State):
-            def __init__(self):
+            def __init__(self,**kwargs):
                 super().__init__(**kwargs)
                 self.hfsm = outer_class
         return HFSMState
                 
-    def give_me_root_state(outer_class,**kwargs):
-        class RootState(outer_class.give_me_state(**kwargs)):
+    def give_me_root_state(outer_class):
+        class RootState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('root')
         return RootState
 
-    def give_move_state(outer_class,**kwargs):
-        class MoveState(outer_class.give_me_state(**kwargs)):
+    def give_move_state(outer_class):
+        class MoveState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('moving')
         return MoveState
 
-    def give_run_state(outer_class,**kwargs):
-        class RunState(outer_class.give_me_state(**kwargs)):
+    def give_run_state(outer_class):
+        class RunState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('running')
         return RunState
 
-    def give_jump_state(outer_class,**kwargs):
-        class JumpState(outer_class.give_me_state(**kwargs)):
+    def give_jump_state(outer_class):
+        class JumpState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('jumping')
         return JumpState
 
-    def give_swim_state(outer_class,**kwargs):
-        class SwimState(outer_class.give_me_state(**kwargs)):
+    def give_swim_state(outer_class):
+        class SwimState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('swimming')
         return SwimState
 
-    def give_fly_state(outer_class,**kwargs):
-        class FlyState(outer_class.give_me_state(**kwargs)):
+    def give_fly_state(outer_class):
+        class FlyState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('flying')
         return FlyState
 
-    def give_idle_state(outer_class,**kwargs):
-        class IdleState(outer_class.give_me_state(**kwargs)):
+    def give_idle_state(outer_class):
+        class IdleState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('idle')
         return IdleState
 
-    def give_sit_state(outer_class,**kwargs):
-        class SitState(outer_class.give_me_state(**kwargs)):
+    def give_sit_state(outer_class):
+        class SitState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('sitting')
         return SitState
 
-    def give_sleep_state(outer_class,**kwargs):
-        class SleepState(outer_class.give_me_state(**kwargs)):
+    def give_sleep_state(outer_class):
+        class SleepState(outer_class.give_me_state()):
             def OnUpdate(self, input):
                 print('sleeping')
         return SleepState
@@ -143,20 +147,29 @@ class HFSM():
 
 if __name__=='__main__':
     hfsm = HFSM()
-    move = hfsm.give_move_state(parent=hfsm.root)()
-    idle = hfsm.give_idle_state(parent=hfsm.root)()
+    class CustomState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('custom')
+            
+    custom = CustomState(parent=hfsm.root)
+    move = hfsm.give_move_state()(parent=hfsm.root)
+    idle = hfsm.give_idle_state()(parent=hfsm.root)
     
-    sit = hfsm.give_sit_state(parent=idle)()
-    sleep = hfsm.give_sleep_state(parent=idle)()
+    sit = hfsm.give_sit_state()(parent=idle)
+    sleep = hfsm.give_sleep_state()(parent=idle)
     
 
-    s = hfsm.give_swim_state(parent = move)()
-    r = hfsm.give_run_state(parent = move)()
-    f = hfsm.give_fly_state(parent = move)()
+    s = hfsm.give_swim_state()(parent = move)
+    r = hfsm.give_run_state()(parent = move)
+    f = hfsm.give_fly_state()(parent = move)
+    
+    
     
     idle.AddTransition('f',f)
     move.AddTransition('s',sit)
     hfsm.root.AddTransition('v',s)
+    
+    hfsm.SetActiveState(custom)
     
     hfsm.setup()
 
