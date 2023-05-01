@@ -90,7 +90,10 @@ class HFSM():
         return RootState
 
 if __name__=='__main__':
+    #create HFSM instance
     hfsm = HFSM()
+    
+    #define states
     class CustomState(hfsm.give_me_state()):
         def OnUpdate(self,input):
             print('custom')
@@ -118,6 +121,7 @@ if __name__=='__main__':
         def OnUpdate(self,input):
             print('run')
             
+    #instantiate states
     custom = CustomState(parent=hfsm.root)
     move =  MoveState(parent=hfsm.root)
     idle = IdleState(parent=hfsm.root)
@@ -131,15 +135,16 @@ if __name__=='__main__':
     f = FlyState(parent = move)
     
     
-    
+    #set up transitions
     idle.AddTransition('f',f)
     move.AddTransition('s',sit)
     hfsm.root.AddTransition('v',s)
     
+    #set active state
     hfsm.SetActiveState(custom)
     
-    hfsm.setup()
-
+   
+    #check to make sure inheritance issue is fixed. should return true
     print(isinstance(s,hfsm.State))
 
     from pynput import keyboard
