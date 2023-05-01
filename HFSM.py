@@ -18,8 +18,12 @@ class HFSM():
     def HandleTransition(self,input):
         self.activestate.HandleTransition(input)
     
-    def SetActiveState(self,state):
-        self.activestate = state
+    def SetActiveState(self,state=None):
+        if state:
+            self.activestate = state
+        else:
+            while len(self.activestate.children)>0:
+                self.activestate = self.activestate.children[0]
         
     class State(ABC):
         def __init__(selff,name='state',parent=None,children=[],transitions=[],outer_class=None):
@@ -92,7 +96,8 @@ class HFSM():
 if __name__=='__main__':
     #create HFSM instance
     hfsm = HFSM()
-    
+    attackhfsm = HFSM()
+    hfsms = [hfsm,attackhfsm]
     #define states
     class CustomState(hfsm.give_me_state()):
         def OnUpdate(self,input):
@@ -121,6 +126,10 @@ if __name__=='__main__':
         def OnUpdate(self,input):
             print('run')
             
+    class AttackState(attackhfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('attack')
+            
     #instantiate states
     custom = CustomState(parent=hfsm.root)
     move =  MoveState(parent=hfsm.root)
@@ -129,12 +138,11 @@ if __name__=='__main__':
     sit = SitState(parent=idle)
     sleep = SleepState(parent=idle)
     
-
     s = SwimState(parent = move)
     r = RunState(parent = move)
     f = FlyState(parent = move)
     
-    
+    atk = AttackState(parent = attackhfsm.root)
     #set up transitions
     idle.AddTransition('f',f)
     move.AddTransition('s',sit)
@@ -142,7 +150,7 @@ if __name__=='__main__':
     
     #set active state
     hfsm.SetActiveState(custom)
-    
+    attackhfsm.SetActiveState()
    
     #check to make sure inheritance issue is fixed. should return true
     print(isinstance(s,hfsm.State))
@@ -153,6 +161,7 @@ if __name__=='__main__':
         try:
             print(key)
             hfsm.Update(key.char)
+            attackhfsm.Update(key.char)
         except AttributeError:
             pass
 
