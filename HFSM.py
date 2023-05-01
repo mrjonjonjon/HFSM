@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from inspect import isabstract
 class HFSM():
     def __init__(self) -> None:
-        self.root = self.RootState()
+        self.root = self.give_me_root_state()()
         self.activestate = self.root
         
     def setup(self):
@@ -16,100 +16,118 @@ class HFSM():
         
     def HandleTransition(self,input):
         self.activestate.HandleTransition(input)
+        
+    def give_me_state(outer_class,parent=None,children=[],transitions=[],name='state'):
+        class State(ABC):
+            def __init__(selff):
+                selff.name=name
+                selff.currentsubstate=None
+                selff.defaultsubstate=None
+                selff.parent=None
+                selff.children=[]
+                selff.transitions=[]
+                
+                selff.hfsm = outer_class
+                
+                for child in children:
+                    if child is not None:
+                        selff.AddChild(child)
+                        
+                if parent is not None:
+                    parent.AddChild(selff)
+                
+                for cond,dest in transitions:
+                    selff.AddTransition(cond,dest)
 
-    class State(ABC):
-        def __init__(self,parent=None,children=[],transitions=[],name='state',hfsm=None):
-            self.name=name
-            self.currentsubstate=None
-            self.defaultsubstate=None
-            self.parent=None
-            self.children=[]
-            self.transitions=[]
-            
-            self.hfsm = hfsm
-            
-            for child in children:
-                if child is not None:
-                    self.AddChild(child)
+                
+            @abstractmethod
+            def OnUpdate(self,input):
+                pass  
+
+            def HandleTransition(selff,input):
+                root = selff
+                while root.parent is not None:
+                    root.parent.currentsubstate = root
+                    root = root.parent
                     
-            if parent is not None:
-                parent.AddChild(self)
-            
-            for cond,dest in transitions:
-                self.AddTransition(cond,dest)
-
-            
-        @abstractmethod
-        def OnUpdate(self,input):
-            pass  
-
-        def HandleTransition(self,input):
-            root = self
-            while root.parent is not None:
-                root.parent.currentsubstate = root
-                root = root.parent
+                while root is not None:
+                    for cond,dest in root.transitions:
+                        #print(type(cond),dest,type(input),cond==input)
+                        if cond == input:
+                            selff.hfsm.activestate = dest
+                            return
+                    root = root.currentsubstate
+                            
+                            
+            def Update(self,input):
+                if self.parent is not None:
+                    self.parent.Update(input)
+                self.OnUpdate(input)
                 
-            while root is not None:
-                for cond,dest in root.transitions:
-                    #print(type(cond),dest,type(input),cond==input)
-                    if cond == input:
-                        self.hfsm.activestate = dest
-                        return
-                root = root.currentsubstate
-                        
-                        
-        def Update(self,input):
-            if self.parent is not None:
-                self.parent.Update(input)
-            self.OnUpdate(input)
-            
-        def AddChild(self,child):
-            if self.currentsubstate is None:
-                self.currentsubstate = child
-            self.children.append(child)
-            child.parent=self
+            def AddChild(selff,child):
+                if selff.currentsubstate is None:
+                    selff.currentsubstate = child
+                selff.children.append(child)
+                child.parent=selff
 
-        def AddTransition(self,cond,dest):
-            self.transitions.append((cond,dest))
-            
-
-    class RootState(State):
-        def OnUpdate(self,input):
-            print('root') 
+            def AddTransition(self,cond,dest):
+                self.transitions.append((cond,dest))
+        return State
                 
-    class MoveState(State):
-        def OnUpdate(self,input):
-            print('moving')
-        
-    class RunState(State):
-        def OnUpdate(self,input):
-            print('running')
+    def give_me_root_state(outer_class,**kwargs):
+        class RootState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('root')
+        return RootState
 
-    class JumpState(State):
-        def OnUpdate(self,input):
-            print('jumping')
-            
-    class SwimState(State):
-        def OnUpdate(self, input):
-            print('swimming')
-        
-    class FlyState(State):
-        def OnUpdate(self, input):
-            print('flying')
-            
-    class IdleState(State):
-        def OnUpdate(self, input):
-            print('idle')
-        
-    class SitState(State):
-        def OnUpdate(self, input):
-            print('sitting')
-            
-    class SleepState(State):
-        def OnUpdate(self, input):
-            print('sleeping')
-        
-        
+    def give_move_state(outer_class,**kwargs):
+        class MoveState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('moving')
+        return MoveState
+
+    def give_run_state(outer_class,**kwargs):
+        class RunState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('running')
+        return RunState
+
+    def give_jump_state(outer_class,**kwargs):
+        class JumpState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('jumping')
+        return JumpState
+
+    def give_swim_state(outer_class,**kwargs):
+        class SwimState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('swimming')
+        return SwimState
+
+    def give_fly_state(outer_class,**kwargs):
+        class FlyState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('flying')
+        return FlyState
+
+    def give_idle_state(outer_class,**kwargs):
+        class IdleState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('idle')
+        return IdleState
+
+    def give_sit_state(outer_class,**kwargs):
+        class SitState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('sitting')
+        return SitState
+
+    def give_sleep_state(outer_class,**kwargs):
+        class SleepState(outer_class.give_me_state(**kwargs)):
+            def OnUpdate(self, input):
+                print('sleeping')
+        return SleepState
+
         
 
 
@@ -120,16 +138,16 @@ class HFSM():
 
 if __name__=='__main__':
     hfsm = HFSM()
-    move = hfsm.MoveState(parent=hfsm.activestate, hfsm=hfsm)
-    idle = hfsm.IdleState(parent=hfsm.activestate,hfsm=hfsm)
+    move = hfsm.give_move_state(parent=hfsm.root)()
+    idle = hfsm.give_idle_state(parent=hfsm.root)()
     
-    sit = hfsm.SitState(parent=idle,hfsm=hfsm)
-    sleep = hfsm.SleepState(parent=idle,hfsm=hfsm)
+    sit = hfsm.give_sit_state(parent=idle)()
+    sleep = hfsm.give_sleep_state(parent=idle)()
     
 
-    s = hfsm.SwimState(parent=move,hfsm=hfsm)
-    r = hfsm.RunState(parent = move,hfsm=hfsm)
-    f = hfsm.FlyState(parent = move,hfsm=hfsm)
+    s = hfsm.give_swim_state(parent=move)()
+    r = hfsm.give_run_state(parent = move)()
+    f = hfsm.give_fly_state(parent = move)()
     
     idle.AddTransition('f',f)
     move.AddTransition('s',sit)
