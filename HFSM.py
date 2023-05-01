@@ -89,79 +89,46 @@ class HFSM():
                 print('root')
         return RootState
 
-    def give_move_state(outer_class):
-        class MoveState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('moving')
-        return MoveState
-
-    def give_run_state(outer_class):
-        class RunState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('running')
-        return RunState
-
-    def give_jump_state(outer_class):
-        class JumpState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('jumping')
-        return JumpState
-
-    def give_swim_state(outer_class):
-        class SwimState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('swimming')
-        return SwimState
-
-    def give_fly_state(outer_class):
-        class FlyState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('flying')
-        return FlyState
-
-    def give_idle_state(outer_class):
-        class IdleState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('idle')
-        return IdleState
-
-    def give_sit_state(outer_class):
-        class SitState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('sitting')
-        return SitState
-
-    def give_sleep_state(outer_class):
-        class SleepState(outer_class.give_me_state()):
-            def OnUpdate(self, input):
-                print('sleeping')
-        return SleepState
-
-        
-
-
-
-
-
-
-
 if __name__=='__main__':
     hfsm = HFSM()
     class CustomState(hfsm.give_me_state()):
         def OnUpdate(self,input):
             print('custom')
             
+    class MoveState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('move')
+    class IdleState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('idle')
+            
+    class SitState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('sit')
+    class SleepState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('sleep')
+    class SwimState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('swim')
+    class FlyState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('fly')
+    class RunState(hfsm.give_me_state()):
+        def OnUpdate(self,input):
+            print('run')
+            
     custom = CustomState(parent=hfsm.root)
-    move = hfsm.give_move_state()(parent=hfsm.root)
-    idle = hfsm.give_idle_state()(parent=hfsm.root)
+    move =  MoveState(parent=hfsm.root)
+    idle = IdleState(parent=hfsm.root)
     
-    sit = hfsm.give_sit_state()(parent=idle)
-    sleep = hfsm.give_sleep_state()(parent=idle)
+    sit = SitState(parent=idle)
+    sleep = SleepState(parent=idle)
     
 
-    s = hfsm.give_swim_state()(parent = move)
-    r = hfsm.give_run_state()(parent = move)
-    f = hfsm.give_fly_state()(parent = move)
+    s = SwimState(parent = move)
+    r = RunState(parent = move)
+    f = FlyState(parent = move)
     
     
     
