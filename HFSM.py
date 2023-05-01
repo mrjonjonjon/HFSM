@@ -17,62 +17,67 @@ class HFSM():
     def HandleTransition(self,input):
         self.activestate.HandleTransition(input)
         
-    def give_me_state(outer_class,parent=None,children=[],transitions=[],name='state'):
-        class State(ABC):
-            def __init__(selff):
-                selff.name=name
-                selff.currentsubstate=None
-                selff.defaultsubstate=None
-                selff.parent=None
-                selff.children=[]
-                selff.transitions=[]
-                
-                selff.hfsm = outer_class
-                
-                for child in children:
-                    if child is not None:
-                        selff.AddChild(child)
-                        
-                if parent is not None:
-                    parent.AddChild(selff)
-                
-                for cond,dest in transitions:
-                    selff.AddTransition(cond,dest)
-
-                
-            @abstractmethod
-            def OnUpdate(self,input):
-                pass  
-
-            def HandleTransition(selff,input):
-                root = selff
-                while root.parent is not None:
-                    root.parent.currentsubstate = root
-                    root = root.parent
+    class State(ABC):
+        def __init__(selff,name='state',parent=None,children=[],transitions=[],outer_class=None):
+            selff.name=name
+            selff.currentsubstate=None
+            selff.defaultsubstate=None
+            selff.parent=None
+            selff.children=[]
+            selff.transitions=[]
+            
+            selff.hfsm = outer_class
+            
+            for child in children:
+                if child is not None:
+                    selff.AddChild(child)
                     
-                while root is not None:
-                    for cond,dest in root.transitions:
-                        #print(type(cond),dest,type(input),cond==input)
-                        if cond == input:
-                            selff.hfsm.activestate = dest
-                            return
-                    root = root.currentsubstate
-                            
-                            
-            def Update(self,input):
-                if self.parent is not None:
-                    self.parent.Update(input)
-                self.OnUpdate(input)
-                
-            def AddChild(selff,child):
-                if selff.currentsubstate is None:
-                    selff.currentsubstate = child
-                selff.children.append(child)
-                child.parent=selff
+            if parent is not None:
+                parent.AddChild(selff)
+            
+            for cond,dest in transitions:
+                selff.AddTransition(cond,dest)
 
-            def AddTransition(self,cond,dest):
-                self.transitions.append((cond,dest))
-        return State
+            
+        @abstractmethod
+        def OnUpdate(self,input):
+            pass  
+
+        def HandleTransition(selff,input):
+            root = selff
+            while root.parent is not None:
+                root.parent.currentsubstate = root
+                root = root.parent
+                
+            while root is not None:
+                for cond,dest in root.transitions:
+                    #print(type(cond),dest,type(input),cond==input)
+                    if cond == input:
+                        selff.hfsm.activestate = dest
+                        return
+                root = root.currentsubstate
+                        
+                        
+        def Update(self,input):
+            if self.parent is not None:
+                self.parent.Update(input)
+            self.OnUpdate(input)
+            
+        def AddChild(selff,child):
+            if selff.currentsubstate is None:
+                selff.currentsubstate = child
+            selff.children.append(child)
+            child.parent=selff
+
+        def AddTransition(self,cond,dest):
+            self.transitions.append((cond,dest))
+            
+    def give_me_state(outer_class,**kwargs):
+        class HFSMState(outer_class.State):
+            def __init__(self):
+                super().__init__(**kwargs)
+                self.hfsm = outer_class
+        return HFSMState
                 
     def give_me_root_state(outer_class,**kwargs):
         class RootState(outer_class.give_me_state(**kwargs)):
@@ -145,7 +150,7 @@ if __name__=='__main__':
     sleep = hfsm.give_sleep_state(parent=idle)()
     
 
-    s = hfsm.give_swim_state(parent=move)()
+    s = hfsm.give_swim_state(parent = move)()
     r = hfsm.give_run_state(parent = move)()
     f = hfsm.give_fly_state(parent = move)()
     
@@ -155,8 +160,7 @@ if __name__=='__main__':
     
     hfsm.setup()
 
-
-
+    print(isinstance(s,hfsm.State))
 
     from pynput import keyboard
 
